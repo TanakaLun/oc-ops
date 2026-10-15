@@ -12,10 +12,12 @@ import (
 	"time"
 
 	"github.com/oc-ops/oc-ops/internal/android"
+	"github.com/oc-ops/oc-ops/internal/batch"
 	"github.com/oc-ops/oc-ops/internal/bg"
 	"github.com/oc-ops/oc-ops/internal/contract"
 	"github.com/oc-ops/oc-ops/internal/file"
 	"github.com/oc-ops/oc-ops/internal/repomap"
+	"github.com/oc-ops/oc-ops/internal/result"
 )
 
 // version is stamped at build time via -ldflags.
@@ -87,10 +89,16 @@ func buildRequest(tool string, rest []string) (contract.Request, error) {
 			return req, err
 		}
 	}
-	// Allow explicit cwd override.
+	// Lift transport fields out of the args object (the plugin overlays them
+	// onto the tool args). They never reach the tool schema.
 	if v, ok := req.Args["cwd"].(string); ok {
 		req.Cwd = v
+		delete(req.Args, "cwd")
 	}
+	if v, ok := req.Args["read_only"].(bool); ok {
+		req.ReadOnly = v
+	}
+	delete(req.Args, "read_only")
 	return req, nil
 }
 
@@ -154,6 +162,10 @@ func dispatch(req contract.Request) (contract.Response, error) {
 			req.Tool = "bg_" + sub
 		}
 		return bg.Handler(req)
+	case "batch":
+		return batch.Handler(req)
+	case "result":
+		return result.Handler(req)
 	case "android_env", "android_apk", "android_dex", "android":
 		if req.Tool == "android" {
 			sub := req.Args["tool"].(string)

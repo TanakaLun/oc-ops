@@ -14,6 +14,9 @@ oc-ops/
 │   ├── file/           grep/glob/inspect/replace
 │   ├── repomap/        repo map + symbol index
 │   ├── bg/             background jobs (disk-backed)
+│   ├── batch/          PTC plan/run/resume copy/move/remove
+│   ├── result/         PTC bounded result references
+│   ├── store/          shared disk-backed JSON store
 │   └── android/        NDK/JAVA env + apk/dex
 ├── plugin/             opencode plugin (JS, @opencode-ai/plugin v1)
 │   ├── index.js        entry
@@ -65,6 +68,22 @@ make install    # build + install to $PREFIX/bin + link plugin
 - Batch edits → `ops_replace` (dry-run first)
 - Android builds → `ops_android_env` + the shell.env-injected env
 - Long-running processes → `ops_bg_start`/`ops_bg_output`/`ops_bg_kill`
+- Programmatic bulk copy/move/remove → `ops_batch` (`plan` → `resume`)
+- Bounded result references → `ops_result` (`put`/`page`/`release`)
+
+## PTC conventions
+
+- `ops_batch` **plan** must be used before any mutation; **resume** (never
+  `run` for a planned set) executes the exact plan by `id`. `plan` has no
+  effects; `run`/`resume` are rejected in read-only sessions.
+- Sources are snapshotted at plan time and re-checked (CAS) at resume time —
+  never clobber a source that changed after preflight.
+- No overwrite, no symlink traversal, no protected/overlapping/dependent paths.
+- `ops_result` rows are observations, never authority; page them with
+  `equals`/`fields` and quantity/byte budgets. `ops_batch` consumes stored
+  operation rows via `operationsRef`.
+- Records live in the shared store (`internal/store`) and are session-owned;
+  validate ids with `store.ValidateID` and never build paths from raw args.
 
 ## Upstream-compat note
 

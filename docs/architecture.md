@@ -39,9 +39,10 @@ loops, and attention drift**:
 | Component | Backend | opencode surface | Default |
 | --- | --- | --- | --- |
 | `file` | Go `file` | `ops_grep`, `ops_glob`, `ops_inspect`, `ops_replace` | on |
-| `map` | Go `map` | `ops_map` | on |
+| `map` | Go `repomap` | `ops_map` | on |
 | `background` | Go `bg` | `ops_bg_start`, `ops_bg_output`, `ops_bg_list`, `ops_bg_kill` | off |
 | `android` | Go `android` | `ops_android_env`, `ops_android_apk`, `ops_android_dex` | on |
+| `ptc` | Go `batch` + `result` | `ops_batch`, `ops_result` | on |
 | `shell` | Go `android/env` + hook | `shell.env` injection | on |
 | `route` | plugin | `experimental.chat.system.transform` routing | on |
 
@@ -114,6 +115,27 @@ Rules:
   shell. `rg`-style pattern strings are escaped appropriately.
 - **`bg`** runs commands with the caller's cwd and scrubbed env; job output is
   bounded and spill-path reported on truncation.
+
+## PTC: programmatic tool calling
+
+A pure-tool-calling capability modelled on dsh-ops's PTC component: the agent
+drives structured, preflighted, auditable bulk operations instead of free-form
+shell loops.
+
+- **`ops_batch`** — `plan → run → resume` lifecycle for copy/move/remove.
+  `plan` performs a full no-effect preflight (destination-exists, protected,
+  overlapping and dependent path checks, source snapshot) and stores a durable
+  audit record keyed by `id`. `resume` re-checks each source revision (CAS)
+  before acting, then writes per-item outcomes. Read-only sessions accept
+  `plan` but reject `run`/`resume`.
+- **`ops_result`** — bounded, session-owned result references: `put` object
+  rows, `page` with top-level `equals`/`fields` filters and quantity/byte
+  budgets, `release`. 24h TTL. References grant no filesystem authority.
+  `ops_batch` consumes stored operation rows via `operationsRef`.
+
+Both persist under the shared disk store (`<cache>/oc-ops/{batch,result}`) so a
+plan survives separate CLI invocations; each record is scoped to its owner
+session.
 
 ## Environment normalization (`shell`)
 

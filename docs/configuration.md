@@ -18,6 +18,7 @@ optional; the defaults are safe.
       "map": true,
       "background": false,
       "android": true,
+      "ptc": true,
       "shell": true,
       "route": true
     },
@@ -41,6 +42,7 @@ optional; the defaults are safe.
 | `components.map` | bool | `true` | map | Enable `ops_map` |
 | `components.background` | bool | `false` | background | Enable background job tools |
 | `components.android` | bool | `true` | android | Enable android tools |
+| `components.ptc` | bool | `true` | ptc | Enable `ops_batch` / `ops_result` |
 | `components.shell` | bool | `true` | shell | Enable env injection |
 | `components.route` | bool | `true` | route | Enable the routing prompt section |
 | `shellEnv` | bool | `true` | shell | Inject Android/NDK/JAVA env + terminal overrides |

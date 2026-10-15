@@ -11,6 +11,7 @@ export const DEFAULT_CONFIG = {
     map: true,
     background: false,
     android: true,
+    ptc: true,
     shell: true,
     route: true,
   },
@@ -21,7 +22,7 @@ export const DEFAULT_CONFIG = {
   extraGuidance: "",
 }
 
-const COMPONENT_KEYS = ["file", "map", "background", "android", "shell", "route"]
+const COMPONENT_KEYS = ["file", "map", "background", "android", "ptc", "shell", "route"]
 const TOP_KEYS = [
   "binaryPath", "required", "toolCallTimeoutMs", "components",
   "shellEnv", "routeSection", "maxOutputLines", "maxFileBytes", "extraGuidance",

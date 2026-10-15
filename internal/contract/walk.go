@@ -8,16 +8,16 @@ import (
 
 // DefaultIgnoredDirs are directory names that file operations never traverse.
 var DefaultIgnoredDirs = map[string]bool{
-	".git":      true,
+	".git":         true,
 	"node_modules": true,
-	"target":    true,
-	".venv":     true,
-	".dsh-ops":  true,
-	".oc-ops":   true,
-	".gradle":   true,
-	".idea":     true,
-	"build":     true,
-	"dist":      true,
+	"target":       true,
+	".venv":        true,
+	".dsh-ops":     true,
+	".oc-ops":      true,
+	".gradle":      true,
+	".idea":        true,
+	"build":        true,
+	"dist":         true,
 }
 
 // IsHidden reports whether any path component under root begins with '.'.
@@ -41,14 +41,14 @@ func IsIgnoredDir(name string) bool {
 
 // WalkOption configures a traversal.
 type WalkOption struct {
-	Root        string
-	MaxDepth    int
-	MaxEntries  int
-	MaxFileSize int64
-	IncludeGlob []string // nil = all files
-	ExcludeGlob []string // patterns matched by relative path
+	Root           string
+	MaxDepth       int
+	MaxEntries     int
+	MaxFileSize    int64
+	IncludeGlob    []string // nil = all files
+	ExcludeGlob    []string // patterns matched by relative path
 	FollowSymlinks bool
-	SkipHidden  bool
+	SkipHidden     bool
 }
 
 // Walk visits every regular file under root, skipping ignored/hidden dirs and

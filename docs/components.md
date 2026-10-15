@@ -11,6 +11,7 @@ Tools use the `ops_` prefix, matching the `dsh-ops` convention.
 | `map` | `map` | `ops_map` | on |
 | `background` | `bg` | `ops_bg_start`, `ops_bg_output`, `ops_bg_list`, `ops_bg_kill` | off |
 | `android` | `android` | `ops_android_env`, `ops_android_apk`, `ops_android_dex` | on |
+| `ptc` | `batch`, `result` | `ops_batch`, `ops_result` | on |
 | `shell` | `android/env` + `shell.env` | (env injection only) | on |
 | `route` | — | (system prompt routing) | on |
 
@@ -127,6 +128,47 @@ components — without a full jadx decompile.
 
 List class/method shapes in a dex/apk (uses dex2jar or a dex parser),
 producing compact `path:line:signature` lines.
+
+### `ptc` — `ops_batch`
+
+Preflighted, durably-audited batch copy/move/remove. The PTC lifecycle:
+
+| Arg | Type | Notes |
+| --- | --- | --- |
+| `action` | `plan`\|`run`\|`resume` (required) | `plan` preflights with no effect; `run` validates + executes; `resume` executes an existing plan by `id` |
+| `operations` | array ≤ 512 | Each `{op: copy\|move\|remove, path, to?}` |
+| `operationsRef` | string | ops_result id holding operation rows; replaces operations |
+| `root` | string | Default session cwd |
+| `protect` | array ≤ 128 | Paths never touched |
+| `id` | string | Plan id to resume |
+
+- `plan` returns `id` + item list; nothing is written.
+- `run`/`resume` require write access; read-only sessions reject them.
+- No overwrite (destination must not exist), no symlink traversal, no
+  protected/overlapping/dependent paths.
+- `resume` re-checks each source revision (CAS) before acting, so a source
+  changed after preflight is never silently clobbered.
+- Plans persist on disk and are session-owned.
+
+### `ptc` — `ops_result`
+
+Bounded, session-owned result references.
+
+| Arg | Type | Notes |
+| --- | --- | --- |
+| `action` | `put`\|`page`\|`release` (required) | |
+| `items` | array ≤ 10000 | Object rows for put |
+| `id` | string | Reference id for page/release |
+| `offset`/`limit` | int | Pagination; limit 1..512 |
+| `maxBytes` | int | Page byte budget 512..65536 |
+| `fields` | array ≤ 32 | Project only these top-level fields |
+| `equals` | object | Filter: rows matching these top-level fields |
+
+- `put` returns `id` + expiry (24h).
+- `page` reads rows with filters/projection and quantity/byte budgets.
+- `release` frees a reference.
+- References are observations, never authority — paging grants no filesystem
+  access. Used by `ops_batch` `operationsRef`.
 
 ## Env normalization (`shell`)
 

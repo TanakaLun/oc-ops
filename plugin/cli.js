@@ -5,10 +5,15 @@ import { execFile } from "node:child_process"
 // Run one oc-ops capability. Returns the parsed Response envelope.
 export function invokeCLI(binaryPath, tool, args, { cwd, timeoutMs = 300000, readOnly = false, owner = "" } = {}) {
   return new Promise((resolve, reject) => {
-    const payload = { tool, args: { ...args, ...(owner ? { owner } : {}) }, cwd, read_only: readOnly }
+    const payload = {
+      ...args,
+      ...(owner ? { owner } : {}),
+      ...(readOnly ? { read_only: true } : {}),
+      ...(cwd ? { cwd } : {}),
+    }
     execFile(
       binaryPath,
-      [tool, JSON.stringify(payload.args)],
+      [tool, JSON.stringify(payload)],
       { cwd, timeout: timeoutMs, maxBuffer: 8 * 1024 * 1024, env: process.env },
       (err, stdout, stderr) => {
         if (err) {

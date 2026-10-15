@@ -28,6 +28,7 @@ on this machine are **token waste, error loops, and attention drift**:
 | `map` | `ops_map` (repo structure + symbol index) | on |
 | `background` | `ops_bg_start`, `ops_bg_output`, `ops_bg_list`, `ops_bg_kill` | off |
 | `android` | `ops_android_env`, `ops_android_apk`, `ops_android_dex` | on |
+| `ptc` | `ops_batch` (plan/run/resume), `ops_result` (put/page/release) | on |
 | `shell` | `shell.env` injection (NDK/JAVA/ANDROID_HOME, NO_COLOR) | on |
 | `route` | system-prompt routing section (progressive disclosure) | on |
 
@@ -38,8 +39,9 @@ Two layers: a **single Go binary** (`oc-ops`, pure-function JSON in/out) and an
 
 ```
 opencode plugin (JS)  --exec-->  oc-ops (Go, $PREFIX/bin)
-ops_grep/glob/inspect/replace/     grep/glob/inspect/replace/map/
-map/bg_*/android_* + hooks          bg_start/output/list/kill + android env/apk/dex
+ops_grep/glob/inspect/            grep/glob/inspect/replace/map/
+replace/map/bg_*/ptc/android      bg_start/output/list/kill + batch/result
+* + hooks                         + android env/apk/dex
 ```
 
 ## Install

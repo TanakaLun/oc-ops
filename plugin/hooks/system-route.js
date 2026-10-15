@@ -20,6 +20,10 @@ export function renderRouting(components, extraGuidance = "") {
   if (components.background) {
     rows.push("| Long-running builds | ops_bg_start / ops_bg_output / ops_bg_list / ops_bg_kill |")
   }
+  if (components.ptc) {
+    rows.push("| Programmatic batch copy/move/remove | ops_batch (plan -> resume) |")
+    rows.push("| Bounded result references | ops_result (put/page/release) |")
+  }
   if (rows.length === 0) return ""
   const head = ["# oc-ops tool routing", "", "| Task | Tool |", "| --- | --- |"]
   const lines = [...head, ...rows]

@@ -17,11 +17,20 @@ project adheres to [Semantic Versioning](https://semver.org).
     per-session ownership and bounded, spill-path output
   - `android`: `env` (NDK/JAVA/ANDROID_HOME resolution), `apk` (aapt2
     badging), `dex` (dex listing)
+  - `batch`: PTC `plan`/`run`/`resume` for copy/move/remove — no-effect
+    preflight, durable on-disk audit, CAS re-checks, no overwrite/link
+    traversal/protected paths, session ownership, read-only rejection
+  - `result`: PTC bounded result references `put`/`page`/`release` — 24h TTL,
+    top-level `equals`/`fields` filters, quantity/byte budgets, references
+    are observations never authority
+  - `store`: shared collision-safe disk-backed JSON store (atomic save/load/
+    delete/list)
 - opencode plugin (`@opencode-ai/plugin` v1) registering `ops_*` tools:
   - `ops_grep`, `ops_glob`, `ops_inspect`, `ops_replace`
   - `ops_map`
   - `ops_bg_start`, `ops_bg_output`, `ops_bg_list`, `ops_bg_kill` (opt-in)
   - `ops_android_env`, `ops_android_apk`, `ops_android_dex`
+  - `ops_batch`, `ops_result` (PTC component, on by default)
 - `shell.env` hook injecting Android/NDK/JAVA toolchain and NO_COLOR/PAGER
   terminal overrides.
 - `experimental.chat.system.transform` hook emitting a compact routing section
@@ -29,5 +38,5 @@ project adheres to [Semantic Versioning](https://semver.org).
 - Strict config validation rejecting unknown keys/components.
 - AGENTS.md for the oc-ops repo + per-repo-type template skeletons
   (Compose / reverse-engineering / Xposed).
-- Go tests (file/repomap/bg) and plugin tests; Makefile targets
-  (`build`, `test`, `plugin-test`, `vet`, `install`); GitHub Actions CI.
+- Go tests (file/repomap/bg/batch/result/store) and plugin tests; Makefile
+  targets (`build`, `test`, `plugin-test`, `vet`, `install`); GitHub Actions CI.

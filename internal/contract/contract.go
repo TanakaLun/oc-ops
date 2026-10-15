@@ -27,19 +27,19 @@ type Request struct {
 
 // Response is the canonical envelope every handler returns.
 type Response struct {
-	Status     string        `json:"status"` // completed | rejected | error
-	Phase      string        `json:"phase"`  // observe | verify
-	Changed    int           `json:"changed"`
-	Matched    int           `json:"matched"`
-	Skipped    int           `json:"skipped"`
-	Failed     int           `json:"failed"`
-	Complete   bool          `json:"complete"`
-	Truncated  bool          `json:"truncated"`
-	Omitted    int           `json:"omitted"`
-	Total      int           `json:"total"`
-	NextOffset int           `json:"nextOffset"`
+	Status     string            `json:"status"` // completed | rejected | error
+	Phase      string            `json:"phase"`  // observe | verify
+	Changed    int               `json:"changed"`
+	Matched    int               `json:"matched"`
+	Skipped    int               `json:"skipped"`
+	Failed     int               `json:"failed"`
+	Complete   bool              `json:"complete"`
+	Truncated  bool              `json:"truncated"`
+	Omitted    int               `json:"omitted"`
+	Total      int               `json:"total"`
+	NextOffset int               `json:"nextOffset"`
 	Items      []json.RawMessage `json:"items,omitempty"`
-	Error      *Error        `json:"error,omitempty"`
+	Error      *Error            `json:"error,omitempty"`
 }
 
 // Error is a structured, actionable failure.
@@ -74,9 +74,9 @@ func OK(items []json.RawMessage, matched, total, offset int, truncated bool) Res
 // Reject returns a completed-but-rejected response (policy denial).
 func Reject(code, message string) (Response, error) {
 	return Response{
-		Status:  "rejected",
-		Phase:   "preflight",
-		Error:   &Error{Code: code, Message: message, Retryable: false},
+		Status: "rejected",
+		Phase:  "preflight",
+		Error:  &Error{Code: code, Message: message, Retryable: false},
 	}, nil
 }
 

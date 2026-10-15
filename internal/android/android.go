@@ -20,12 +20,12 @@ type Item = contract.Item
 
 // Env describes the resolved Android toolchain environment.
 type Env struct {
-	AndroidHome   string `json:"ANDROID_HOME"`
-	AndroidNdk    string `json:"ANDROID_NDK_HOME"`
-	NdkVersion    string `json:"NDK_VERSION"`
-	JavaHome      string `json:"JAVA_HOME"`
-	NdkToolchain  string `json:"NDK_TOOLCHAIN"`
-	Available     bool   `json:"available"`
+	AndroidHome  string `json:"ANDROID_HOME"`
+	AndroidNdk   string `json:"ANDROID_NDK_HOME"`
+	NdkVersion   string `json:"NDK_VERSION"`
+	JavaHome     string `json:"JAVA_HOME"`
+	NdkToolchain string `json:"NDK_TOOLCHAIN"`
+	Available    bool   `json:"available"`
 }
 
 func Handler(req contract.Request) (contract.Response, error) {

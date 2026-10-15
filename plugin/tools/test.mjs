@@ -11,6 +11,7 @@ test("resolveConfig defaults", () => {
   assert.equal(c.binaryPath, "oc-ops")
   assert.equal(c.components.file, true)
   assert.equal(c.components.background, false)
+  assert.equal(c.components.ptc, true)
   assert.equal(c.shellEnv, true)
 })
 
@@ -25,12 +26,14 @@ test("resolveConfig validates component types", () => {
 })
 
 test("renderRouting reflects enabled components", () => {
-  const all = renderRouting({ file: true, map: true, background: true, android: true })
+  const all = renderRouting({ file: true, map: true, background: true, android: true, ptc: true })
   assert.ok(all.includes("ops_grep"))
   assert.ok(all.includes("ops_map"))
   assert.ok(all.includes("ops_bg_start"))
   assert.ok(all.includes("ops_android_env"))
-  const none = renderRouting({ file: false, map: false, background: false, android: false })
+  assert.ok(all.includes("ops_batch"))
+  assert.ok(all.includes("ops_result"))
+  const none = renderRouting({ file: false, map: false, background: false, android: false, ptc: false })
   assert.equal(none, "")
 })
 

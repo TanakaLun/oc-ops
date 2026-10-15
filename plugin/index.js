@@ -6,6 +6,7 @@ import { fileTools } from "./tools/file.js"
 import { mapTool } from "./tools/map.js"
 import { backgroundTools } from "./tools/background.js"
 import { androidTools } from "./tools/android.js"
+import { ptcTools } from "./tools/ptc.js"
 import { shellEnvHook } from "./hooks/shell-env.js"
 import { routeSectionHook } from "./hooks/system-route.js"
 
@@ -33,6 +34,7 @@ export const OcOpsPlugin = async (input, options) => {
   if (config.components.map) Object.assign(tools, mapTool(binaryPath))
   if (config.components.background) Object.assign(tools, backgroundTools(binaryPath))
   if (config.components.android) Object.assign(tools, androidTools(binaryPath))
+  if (config.components.ptc) Object.assign(tools, ptcTools(binaryPath))
 
   const hooks = {}
   if (Object.keys(tools).length) hooks.tool = tools

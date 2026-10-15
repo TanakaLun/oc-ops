@@ -39,6 +39,14 @@ oc-ops map --path . --mode both --depth 6
 
 # android env (for inspection / sourcing)
 oc-ops android env
+
+# PTC: plan a no-effect batch, then resume it
+oc-ops batch '{"action":"plan","operations":[{"op":"copy","path":"a.txt","to":"b.txt"}]}'
+oc-ops batch '{"action":"resume","id":"b-..."}'
+
+# PTC: store rows and page them
+oc-ops result '{"action":"put","items":[{"n":1},{"n":2}]}'
+oc-ops result '{"action":"page","id":"r-...","equals":{"n":1}}'
 ```
 
 ## opencode integration
