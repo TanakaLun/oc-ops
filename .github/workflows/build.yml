@@ -1,0 +1,39 @@
+name: build-and-test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  go:
+    name: Go build & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
+      - name: Build
+        run: go build -o bin/oc-ops ./cmd/oc-ops
+      - name: Vet
+        run: go vet ./...
+      - name: Test
+        run: go test ./...
+
+  plugin:
+    name: opencode plugin test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install plugin dep
+        run: |
+          cd plugin
+          mkdir -p node_modules/@opencode-ai
+          # @opencode-ai/plugin is a peer light package; fetch it for the test.
+          npm install --no-save @opencode-ai/plugin@1.18.15 --prefix . 2>/dev/null || true
+      - name: Run plugin tests
+        run: node --test plugin/tools/test.mjs

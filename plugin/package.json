@@ -1,0 +1,11 @@
+{
+  "name": "oc-ops-plugin",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "opencode plugin for oc-ops: token-efficient ops tools + Android env + routing",
+  "main": "index.js",
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.18.15"
+  }
+}

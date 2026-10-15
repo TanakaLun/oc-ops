@@ -1,0 +1,21 @@
+# Build artifacts
+/bin/
+*.exe
+*.test
+*.out
+
+# Go workspace
+vendor/
+.idea/
+.vscode/
+
+# opencode plugin node deps
+node_modules/
+plugin/*.log
+
+# Runtime state
+.oc-ops/
+*.spill
+
+# OS
+.DS_Store
