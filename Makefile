@@ -34,18 +34,20 @@ install: build plugin-install
 	install -m 0755 $(BIN) "$(PREFIX)/bin/oc-ops"
 	@echo "installed $(PREFIX)/bin/oc-ops"
 
-## plugin-install: link the opencode plugin into the global plugins dir
+## plugin-install: register the plugin in the global opencode.json plugin array
+## opencode v1.18 discovers local plugins either from ~/.config/opencode/plugins/
+## (v2-only entrypoints, silently dropped for v1 plugins) or from the config
+## `plugin` array (v1 legacy compatible). We register the plugin directory in
+## the config array — the reliable path for this v1 plugin.
 plugin-install:
-	@mkdir -p "$(HOME)/.config/opencode/plugins"
-	@ln -sfn "$(CURDIR)/plugin" "$(HOME)/.config/opencode/plugins/oc-ops"
-	@echo "linked plugin -> $(HOME)/.config/opencode/plugins/oc-ops"
+	@node scripts/plugin-register.js install
 
-## uninstall: remove the installed CLI and the plugin link
+## uninstall: remove the installed CLI and the plugin registration
 uninstall: plugin-uninstall
 	rm -f "$(PREFIX)/bin/oc-ops"
 
 plugin-uninstall:
-	rm -f "$(HOME)/.config/opencode/plugins/oc-ops"
+	@node scripts/plugin-register.js uninstall
 
 ## clean: remove build artifacts
 clean:
