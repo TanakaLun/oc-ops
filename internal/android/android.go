@@ -61,6 +61,11 @@ func ResolveEnv(home string) Env {
 	if jh := os.Getenv("JAVA_HOME"); jh != "" {
 		env.JavaHome = jh
 	} else if p, err := exec.LookPath("java"); err == nil {
+		// resolve symlinks (e.g. /usr/bin/java -> /etc/alternatives/java ->
+		// /usr/lib/jvm/.../bin/java) so JAVA_HOME is the real JDK root.
+		if real, rerr := filepath.EvalSymlinks(p); rerr == nil {
+			p = real
+		}
 		env.JavaHome = filepath.Dir(filepath.Dir(p))
 	}
 	env.Available = env.AndroidHome != "" || env.AndroidNdk != "" || env.JavaHome != ""
@@ -174,6 +179,7 @@ func hostPrebuilt() string {
 func sdkAt(home string) string {
 	candidates := []string{
 		filepath.Join(home, "Android", "Sdk"),
+		"/opt/android-sdk",
 		"/data/data/com.termux/files/home/Android/Sdk",
 	}
 	for _, c := range candidates {
