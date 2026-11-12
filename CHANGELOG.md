@@ -28,6 +28,10 @@ project adheres to [Semantic Versioning](https://semver.org).
 
 ### Fixed
 
+- opencode v2 no longer fails to load a leftover legacy `plugin` entry: the
+  installer registers the v2 plugin only by default and strips any v1 entry
+  (opencode v2 still tries to load `plugin` entries, and the v1 implementation
+  needs `@opencode-ai/plugin`). Use `make plugin-install-v1` for opencode 1.x.
 - Namespace CLI form `oc-ops file grep '{"path":...}'` no longer leaks the
   `tool` key into handler args (it was rejected by strict file validation).
 - Test-suite race: `go test ./...` packages deleted the shared store root

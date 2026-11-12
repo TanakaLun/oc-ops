@@ -34,7 +34,12 @@ array (v1). Settings live in the plugin `options`:
 ```
 
 `make install` / `node scripts/plugin-register.js install <binaryPath>` writes
-this entry (with your installed binary path) automatically.
+this entry (with your installed binary path) automatically. It registers the v2
+plugin only and removes any stale legacy `plugin` entry — opencode v2 still
+tries to load `plugin` entries, and the v1 implementation fails without
+`@opencode-ai/plugin`. For opencode 1.x, register the legacy entry explicitly
+with `node scripts/plugin-register.js install <binaryPath> v1` (or `make
+plugin-install-v1`).
 
 ## Key reference
 

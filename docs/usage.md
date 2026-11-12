@@ -22,9 +22,11 @@ make install        # build + copy to $PREFIX/bin + register the opencode plugin
 - **CLI**: `oc-ops` lands in `$PREFIX/bin`. On Termux `$PREFIX` defaults to
   `/data/data/com.termux/files/usr`; on other Unix-like systems the default is
   `/usr/local` (override with `make install PREFIX=~/.local` without root).
-- **Plugin**: `plugin/` (v1) and `plugin-v2/` (v2) are registered in
-  `~/.config/opencode/opencode.json` under the `plugin` / `plugins` arrays
-  respectively, with the installed binary path as `binaryPath`.
+- **Plugin**: `plugin-v2/` is registered in `~/.config/opencode/opencode.json`
+  under the `plugins` array with the installed binary path as `binaryPath`.
+  Legacy opencode 1.x can use `make plugin-install-v1` (registers `plugin/`
+  under the `plugin` array; it needs `@opencode-ai/plugin` installed in
+  `plugin/node_modules`).
 
 ## Direct CLI use
 

@@ -18,7 +18,7 @@ ifeq ($(shell command -v $(GO) 2>/dev/null),)
 GO := $(shell ls -d /opt/go*/bin/go /usr/local/go/bin/go 2>/dev/null | head -1)
 endif
 
-.PHONY: all build test vet clean install uninstall plugin-install plugin-uninstall link plugin-test
+.PHONY: all build test vet clean install uninstall plugin-install plugin-install-v1 plugin-uninstall link plugin-test
 
 all: build
 
@@ -45,11 +45,18 @@ install: build plugin-install
 	install -m 0755 $(BIN) "$(PREFIX)/bin/oc-ops"
 	@echo "installed $(PREFIX)/bin/oc-ops"
 
-## plugin-install: register the plugin in the global opencode.json
-## Registers both the v1 plugin (opencode `plugin` array) and the v2 plugin
-## (opencode `plugins` array) with the installed binary path.
+## plugin-install: register the v2 plugin in the global opencode.json
+## Registers the v2 plugin (`plugins` array) with the installed binary path and
+## strips any stale v1 entry. opencode v2 still tries to load legacy `plugin`
+## entries, and the v1 implementation needs @opencode-ai/plugin, so a leftover
+## v1 entry shows up as "Plugin failed to load".
 plugin-install:
-	@node scripts/plugin-register.js install "$(PREFIX)/bin/oc-ops"
+	@node scripts/plugin-register.js install "$(PREFIX)/bin/oc-ops" v2
+
+## plugin-install-v1: legacy opencode 1.x (`plugin` array); requires
+## @opencode-ai/plugin to be installed in plugin/node_modules
+plugin-install-v1:
+	@node scripts/plugin-register.js install "$(PREFIX)/bin/oc-ops" v1
 
 ## uninstall: remove the installed CLI and the plugin registration
 uninstall: plugin-uninstall
