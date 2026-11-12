@@ -18,8 +18,6 @@ carries the repo-specific rules.
 - Find code → `ops_grep` (outputMode=summary/count to stay token-lean).
 - Read a file → `ops_inspect` (offset/limit for continuation).
 - Batch edits → `ops_replace` (dry-run first, then `apply:true`).
-- Confirm Android env before builds → `ops_android_env` (the shell.env hook
-  sets ANDROID_HOME/NDK/JAVA automatically).
 
 ## Compose conventions to honor
 

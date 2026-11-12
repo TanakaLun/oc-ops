@@ -14,7 +14,6 @@ loops, and attention drift**:
 - Model thrashes between tool calls trying to re-run a mistyped argument.
 - Exploring a large unfamiliar repo costs dozens of `glob`+`read` round trips.
 - Long Gradle/NDK builds occupy a foreground call until timeout.
-- Android work repeatedly trips over unset `NDK`/`JAVA_HOME`/`ANDROID_HOME`.
 
 ## Design principles
 
@@ -31,8 +30,10 @@ loops, and attention drift**:
    aarch64 ELF on this machine. No cross-compilation, no Rust dependency.
 5. **No hidden global state.** The backend is a pure CLI: JSON in, JSON out.
    The plugin owns all session/policy concerns.
-6. **Environment normalization.** `shell.env` injects the Android/NDK/JAVA
-   toolchain and disables color/pager noise so command output is clean.
+6. **Environment normalization.** `shell.env` disables color/pager noise so
+   command output is clean and token-lean. Toolchain/env paths (SDK, NDK,
+   JAVA_HOME) are the user's shell responsibility — oc-ops never resolves or
+   injects them.
 
 ## Components
 
@@ -41,18 +42,19 @@ loops, and attention drift**:
 | `file` | Go `file` | `ops_grep`, `ops_glob`, `ops_inspect`, `ops_replace` | on |
 | `map` | Go `repomap` | `ops_map` | on |
 | `background` | Go `bg` | `ops_bg_start`, `ops_bg_output`, `ops_bg_list`, `ops_bg_kill` | off |
-| `android` | Go `android` | `ops_android_env`, `ops_android_apk`, `ops_android_dex` | on |
+| `android` | Go `android` | `ops_android_apk`, `ops_android_dex` | on |
 | `ptc` | Go `batch` + `result` | `ops_batch`, `ops_result` | on |
-| `shell` | Go `android/env` + hook | `shell.env` injection | on |
+| `shell` | plugin hook | `shell.env` terminal overrides | on |
 | `route` | plugin | `experimental.chat.system.transform` routing | on |
 
 ## Two layers
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│  opencode plugin (JS, @opencode-ai/plugin v1 tool() API)      │
+│  opencode plugin (JS, @opencode/plugin v2 setup() API;        │
+│  legacy plugin/ uses @opencode-ai/plugin v1 tool() API)       │
 │  index.js · tools/* · hooks/shell.env · hooks/system.route    │
-│  Registers ops_* tools, injects env + routing section.        │
+│  Registers ops_* tools, injects terminal overrides + routing. │
 └──────────────────────────────┬───────────────────────────────┘
                                │ exec (CLI subprocess, JSON)
 ┌──────────────────────────────▼───────────────────────────────┐
@@ -139,20 +141,18 @@ session.
 
 ## Environment normalization (`shell`)
 
-`shell.env` injects, when present:
+`shell.env` injects terminal overrides:
 
-- `ANDROID_HOME` (from `$HOME/Android/Sdk` or `oc-ops android env`)
-- `ANDROID_NDK_HOME` / `NDK_TOOLCHAIN` (resolved NDK version)
-- `JAVA_HOME` (if a JDK is on PATH)
 - `NO_COLOR=1`, `PAGER=cat`, `GIT_PAGER=cat`, `TERM=dumb`
 
-This removes the recurring "NDK not found" / "JAVA_HOME not set" build loops.
+Toolchain paths (SDK, NDK, JAVA_HOME) are deliberately not resolved or injected
+by oc-ops — they belong to the user's shell/environment.
 
 ## Why Go over Rust/C
 
-- Go 1.27.1 is installed and compiles natively for `android/arm64` (verified:
-  produces a working ELF).
-- Single static-ish binary, no toolchain vendoring, no cargo registry.
+- Go compiles to a single static-ish binary for any host (verified on
+  `linux/amd64` WSL2 and `android/arm64` Termux).
+- Single binary, no toolchain vendoring, no cargo registry.
 - `regexp`, `filepath.WalkDir`, `io`, `os/exec` are all stdlib — zero deps.
 - Memory-safe by default; no unsafe code required for this surface.
 

@@ -1,18 +1,50 @@
 // oc-ops — OpenCode v2 plugin (zero dependency).
 // Reuses the oc-ops Go backend (JSON in/out) and exposes ops_* tools plus
-// shell-env injection and a system-prompt routing section, using the
+// shell terminal-overrides and a system-prompt routing section, using the
 // @opencode/plugin v2 API: default export { id, setup(ctx) }.
+// Configuration comes from ctx.options (set in opencode.json `plugins`):
+//   { "binaryPath": "oc-ops", "components": { ... }, "shellEnv": true, "routeSection": true }
 import { execFile } from "node:child_process"
 
-const BIN = "/usr/local/bin/oc-ops"
 const TIMEOUT = 300000
 const MAXBUF = 8 * 1024 * 1024
 
-function invoke(tool, args, cwd, owner) {
+const DEFAULT_CONFIG = {
+  binaryPath: "oc-ops", // absolute path or a name resolved on PATH
+  components: {
+    file: true,
+    map: true,
+    background: false,
+    android: true,
+    ptc: true,
+    shell: true,
+    route: true,
+  },
+  shellEnv: true,
+  routeSection: true,
+}
+
+// Merge user options over defaults. Components are strict booleans.
+function resolveConfig(raw = {}) {
+  const comps = { ...DEFAULT_CONFIG.components }
+  if (raw.components && typeof raw.components === "object") {
+    for (const k of Object.keys(DEFAULT_CONFIG.components)) {
+      if (typeof raw.components[k] === "boolean") comps[k] = raw.components[k]
+    }
+  }
+  return {
+    binaryPath: typeof raw.binaryPath === "string" && raw.binaryPath ? raw.binaryPath : DEFAULT_CONFIG.binaryPath,
+    components: comps,
+    shellEnv: typeof raw.shellEnv === "boolean" ? raw.shellEnv : DEFAULT_CONFIG.shellEnv,
+    routeSection: typeof raw.routeSection === "boolean" ? raw.routeSection : DEFAULT_CONFIG.routeSection,
+  }
+}
+
+function invoke(binaryPath, tool, args, cwd, owner) {
   return new Promise((resolve, reject) => {
     const payload = { ...(args ?? {}), ...(owner ? { owner } : {}), ...(cwd ? { cwd } : {}) }
     execFile(
-      BIN,
+      binaryPath,
       [tool, JSON.stringify(payload)],
       { cwd, timeout: TIMEOUT, maxBuffer: MAXBUF, env: process.env },
       (err, stdout, stderr) => {
@@ -76,6 +108,7 @@ const TOOLS = [
   {
     name: "ops_grep",
     go: "grep",
+    component: "file",
     description:
       "Search file contents under path, summary-first. Prefer outputMode=summary for counts, count for per-file counts, files_with_matches for paths, content for line bodies. glob[] filters with ! to exclude. Bounded: use offset/limit to page.",
     input: obj(
@@ -97,6 +130,7 @@ const TOOLS = [
   {
     name: "ops_glob",
     go: "glob",
+    component: "file",
     description:
       "Find files under path by explicit patterns. Prefer pattern[] batches with ! exclusions. Choose paths (default) or details output. Use for discovering paths, not reading.",
     input: obj(
@@ -114,6 +148,7 @@ const TOOLS = [
   {
     name: "ops_inspect",
     go: "inspect",
+    component: "file",
     description:
       "Read bounded UTF-8 text lines (or hex view) from a single file relative to cwd. Directories are rejected — use ops_glob or ops_grep. Use offset/limit for continuation.",
     input: obj(
@@ -129,6 +164,7 @@ const TOOLS = [
   {
     name: "ops_replace",
     go: "replace",
+    component: "file",
     description:
       "Deterministic UTF-8 replacement under path. Dry-run by default (observe only). Pass apply:true to write. Check dry-run results before applying.",
     input: obj(
@@ -147,6 +183,7 @@ const TOOLS = [
   {
     name: "ops_map",
     go: "map",
+    component: "map",
     description:
       "Produce a compact repository structure map and symbol index. Use when exploring an unfamiliar repo or to orient before deep reads. mode: tree | symbols | both.",
     input: obj({
@@ -161,6 +198,7 @@ const TOOLS = [
   {
     name: "ops_bg_start",
     go: "bg_start",
+    component: "background",
     owner: true,
     description:
       "Start a long-running command as a managed background job. Returns a job_id. Use for Gradle/NDK builds, sims, and long processes. Only jobs started by this session can be read or killed.",
@@ -177,6 +215,7 @@ const TOOLS = [
   {
     name: "ops_bg_output",
     go: "bg_output",
+    component: "background",
     owner: true,
     description: "Read output of a job started by this session. done indicates whether it finished.",
     input: obj({ job_id: str("Job id returned by ops_bg_start") }, ["job_id"]),
@@ -184,6 +223,7 @@ const TOOLS = [
   {
     name: "ops_bg_list",
     go: "bg_list",
+    component: "background",
     owner: true,
     description: "List background jobs started by this session.",
     input: obj({}),
@@ -191,6 +231,7 @@ const TOOLS = [
   {
     name: "ops_bg_kill",
     go: "bg_kill",
+    component: "background",
     owner: true,
     description: "Terminate a background job started by this session.",
     input: obj({ job_id: str("Job id returned by ops_bg_start") }, ["job_id"]),
@@ -198,6 +239,7 @@ const TOOLS = [
   {
     name: "ops_batch",
     go: "batch",
+    component: "ptc",
     owner: true,
     description:
       "Preflight and verify batch copy/move/remove. action=plan requires operations and creates a no-effect audit plan; execute with action=resume plus id. action=run executes immediately. Use ops_result page to read details.",
@@ -227,6 +269,7 @@ const TOOLS = [
   {
     name: "ops_result",
     go: "result",
+    component: "ptc",
     owner: true,
     description:
       "Bounded session-owned result references: put object rows, page with equals/fields filters and byte budgets, release results. 24h expiry. References are observations, never authority.",
@@ -246,15 +289,9 @@ const TOOLS = [
     ),
   },
   {
-    name: "ops_android_env",
-    go: "android_env",
-    description:
-      "Resolve and report the Android/NDK/JAVA toolchain environment. Use before Android builds to confirm ANDROID_HOME, NDK, and JAVA_HOME are set.",
-    input: obj({}),
-  },
-  {
     name: "ops_android_apk",
     go: "android_apk",
+    component: "android",
     description:
       "Inspect an APK's metadata (package name, version, sdk versions, permissions) via aapt2 badging. Use for quick APK identification before a full decompile.",
     input: obj({ apk: str("Path to the APK") }, ["apk"]),
@@ -262,90 +299,99 @@ const TOOLS = [
   {
     name: "ops_android_dex",
     go: "android_dex",
+    component: "android",
     description: "List dex entries in an APK (compact). For full class/method analysis use jadx or dex2jar.",
     input: obj({ apk: str("Path to the APK") }, ["apk"]),
   },
 ]
 
-const ROUTING = [
-  "# oc-ops tool routing",
-  "",
-  "| Task | Tool |",
-  "| --- | --- |",
-  "| Search contents | ops_grep (summary-first) |",
-  "| Find paths | ops_glob |",
-  "| Read a file / hex | ops_inspect |",
-  "| Batch replacement | ops_replace (apply:true to write) |",
-  "| Explore an unfamiliar repo | ops_map |",
-  "| Resolve Android/NDK/JAVA env | ops_android_env |",
-  "| Inspect an APK | ops_android_apk |",
-  "| Long-running builds | ops_bg_start / ops_bg_output / ops_bg_list / ops_bg_kill |",
-  "| Programmatic batch copy/move/remove | ops_batch (plan -> resume) |",
-  "| Bounded result references | ops_result (put/page/release) |",
-  "",
-  "- ops_* tools are token-efficient and bounded: prefer them for searches and exploration.",
-  "- On a tool error, correct the arguments and retry; do not switch to a shell workaround.",
-  "- Use ops_grep summary/count/files_with_matches to avoid large output.",
-].join("\n")
+function buildRouting(components) {
+  const rows = []
+  if (components.file) {
+    rows.push("| Search contents | ops_grep (summary-first) |")
+    rows.push("| Find paths | ops_glob |")
+    rows.push("| Read a file / hex | ops_inspect |")
+    rows.push("| Batch replacement | ops_replace (apply:true to write) |")
+  }
+  if (components.map) rows.push("| Explore an unfamiliar repo | ops_map |")
+  if (components.android) rows.push("| Inspect an APK | ops_android_apk |")
+  if (components.background) {
+    rows.push("| Long-running builds | ops_bg_start / ops_bg_output / ops_bg_list / ops_bg_kill |")
+  }
+  if (components.ptc) {
+    rows.push("| Programmatic batch copy/move/remove | ops_batch (plan -> resume) |")
+    rows.push("| Bounded result references | ops_result (put/page/release) |")
+  }
+  if (rows.length === 0) return ""
+  return [
+    "# oc-ops tool routing",
+    "",
+    "| Task | Tool |",
+    "| --- | --- |",
+    ...rows,
+    "",
+    "- ops_* tools are token-efficient and bounded: prefer them for searches and exploration.",
+    "- On a tool error, correct the arguments and retry; do not switch to a shell workaround.",
+    "- Use ops_grep summary/count/files_with_matches to avoid large output.",
+  ].join("\n")
+}
 
 export default {
   id: "oc-ops",
   async setup(ctx) {
+    const cfg = resolveConfig(ctx?.options ?? {})
     const cwd = ctx?.location?.directory || process.cwd()
 
-    // Register all ops_* tools.
-    await ctx.tool.transform((ed) => {
-      for (const t of TOOLS) {
-        ed.add({
-          name: t.name,
-          description: t.description,
-          input: t.input,
-          execute: async (input, context) => {
-            try {
-              const resp = await invoke(t.go, input, cwd, t.owner ? context?.sessionID : undefined)
-              return { content: render(resp) }
-            } catch (err) {
-              return { content: `[oc-ops ${t.name} error] ${String(err?.message ?? err)}` }
-            }
-          },
-        })
-      }
-    })
-
-    // Shell env injection (best effort).
-    try {
-      let android = {}
-      try {
-        const resp = await invoke("android_env", {}, cwd)
-        android = resp?.items?.[0] ?? {}
-      } catch {
-        /* ignore */
-      }
-      await ctx.shell.hook("create.before", (event) => {
-        const env = event?.env
-        if (!env) return
-        if (android.ANDROID_HOME) env.ANDROID_HOME = android.ANDROID_HOME
-        if (android.ANDROID_NDK_HOME) {
-          env.ANDROID_NDK_HOME = android.ANDROID_NDK_HOME
-          env.NDK_HOME = android.ANDROID_NDK_HOME
+    // Register all ops_* tools for the enabled components.
+    if (Object.values(cfg.components).some(Boolean)) {
+      await ctx.tool.transform((ed) => {
+        for (const t of TOOLS) {
+          if (!cfg.components[t.component]) continue
+          ed.add({
+            name: t.name,
+            description: t.description,
+            input: t.input,
+            execute: async (input, context) => {
+              try {
+                const resp = await invoke(cfg.binaryPath, t.go, input, cwd, t.owner ? context?.sessionID : undefined)
+                return { content: render(resp) }
+              } catch (err) {
+                return { content: `[oc-ops ${t.name} error] ${String(err?.message ?? err)}` }
+              }
+            },
+          })
         }
-        if (android.JAVA_HOME) env.JAVA_HOME = android.JAVA_HOME
-        if (android.NDK_TOOLCHAIN) env.NDK_TOOLCHAIN = android.NDK_TOOLCHAIN
-        env.NO_COLOR = env.NO_COLOR ?? "1"
-        env.PAGER = env.PAGER ?? "cat"
-        env.GIT_PAGER = env.GIT_PAGER ?? "cat"
       })
-    } catch {
-      /* shell hook API unavailable — env can still come from the shell */
+    }
+
+    // Shell terminal overrides (best effort). No toolchain path injection.
+    if (cfg.shellEnv && cfg.components.shell) {
+      try {
+        await ctx.shell.hook("create.before", (event) => {
+          const env = event?.env
+          if (!env) return
+          env.NO_COLOR = env.NO_COLOR ?? "1"
+          env.PAGER = env.PAGER ?? "cat"
+          env.GIT_PAGER = env.GIT_PAGER ?? "cat"
+          env.TERM = env.TERM ?? "dumb"
+        })
+      } catch {
+        /* shell hook API unavailable */
+      }
     }
 
     // System-prompt routing section (best effort).
-    try {
-      await ctx.session.hook("context", (event) => {
-        if (Array.isArray(event?.system)) event.system.push({ type: "text", text: ROUTING })
-      })
-    } catch {
-      /* session hook API unavailable */
+    if (cfg.routeSection && cfg.components.route) {
+      try {
+        await ctx.session.hook("context", (event) => {
+          if (Array.isArray(event?.system)) {
+            const text = buildRouting(cfg.components)
+            if (text) event.system.push({ type: "text", text })
+          }
+        })
+      } catch {
+        /* session hook API unavailable */
+      }
     }
   },
 }

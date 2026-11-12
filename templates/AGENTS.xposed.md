@@ -19,7 +19,6 @@ module-specific rules.
 - Find the target members → `ops_grep` (search strings/classes) + DexKit skills.
 - Explore module structure → `ops_map`.
 - Batch edits across the module → `ops_replace` (dry-run first).
-- Confirm Android env before build → `ops_android_env`.
 
 ## Module conventions
 

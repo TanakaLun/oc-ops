@@ -30,7 +30,7 @@ test("renderRouting reflects enabled components", () => {
   assert.ok(all.includes("ops_grep"))
   assert.ok(all.includes("ops_map"))
   assert.ok(all.includes("ops_bg_start"))
-  assert.ok(all.includes("ops_android_env"))
+  assert.ok(all.includes("ops_android_apk"))
   assert.ok(all.includes("ops_batch"))
   assert.ok(all.includes("ops_result"))
   const none = renderRouting({ file: false, map: false, background: false, android: false, ptc: false })

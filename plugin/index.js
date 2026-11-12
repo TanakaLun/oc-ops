@@ -39,7 +39,7 @@ export const OcOpsPlugin = async (input, options) => {
   const hooks = {}
   if (Object.keys(tools).length) hooks.tool = tools
   if (config.shellEnv && config.components.shell) {
-    hooks["shell.env"] = shellEnvHook(binaryPath, input.directory)
+    hooks["shell.env"] = shellEnvHook()
   }
   if (config.routeSection && config.components.route) {
     hooks["experimental.chat.system.transform"] = routeSectionHook(

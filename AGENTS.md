@@ -17,7 +17,7 @@ oc-ops/
 │   ├── batch/          PTC plan/run/resume copy/move/remove
 │   ├── result/         PTC bounded result references
 │   ├── store/          shared disk-backed JSON store
-│   └── android/        NDK/JAVA env + apk/dex
+│   └── android/        apk/dex inspection
 ├── plugin/             opencode plugin (JS, @opencode-ai/plugin v1)
 │   ├── index.js        entry
 │   ├── config.js       config resolution + validation
@@ -66,7 +66,7 @@ make install    # build + install to $PREFIX/bin + link plugin
 - Searches/exploration → `ops_grep` (summary-first) / `ops_glob` / `ops_map`
 - Reading a file → `ops_inspect`
 - Batch edits → `ops_replace` (dry-run first)
-- Android builds → `ops_android_env` + the shell.env-injected env
+- APK identification → `ops_android_apk` / `ops_android_dex`
 - Long-running processes → `ops_bg_start`/`ops_bg_output`/`ops_bg_kill`
 - Programmatic bulk copy/move/remove → `ops_batch` (`plan` → `resume`)
 - Bounded result references → `ops_result` (`put`/`page`/`release`)
@@ -87,6 +87,12 @@ make install    # build + install to $PREFIX/bin + link plugin
 
 ## Upstream-compat note
 
-The plugin uses `@opencode-ai/plugin` **v1** (`tool()` helper, `Hooks` object),
-not the v2 `define` API. The installed version is `1.18.15`. When a hook or
-tool shape is added, confirm it exists in the v1 `Hooks` interface.
+Two plugin implementations ship:
+
+- `plugin/` — legacy `@opencode-ai/plugin` **v1** (`tool()` helper, `Hooks`
+  object). Additions must exist in the v1 `Hooks` interface (`1.18.15`).
+- `plugin-v2/` — **v2** `@opencode/plugin` (`setup(ctx)` + context transforms,
+  zero-dependency). It mirrors the v1 tool surface; keep both in sync.
+
+Changes to a capability touch: the Go handler, `plugin/tools/*.js`, and
+`plugin-v2/index.js` (TOOLS + routing), plus the component docs.

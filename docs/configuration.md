@@ -5,51 +5,60 @@ optional; the defaults are safe.
 
 ## Example
 
+The plugin is registered via the `plugins` array (v2) or the legacy `plugin`
+array (v1). Settings live in the plugin `options`:
+
 ```jsonc
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["oc-ops"],
-  "oc-ops": {
-    "binaryPath": "oc-ops",
-    "required": false,
-    "toolCallTimeoutMs": 300000,
-    "components": {
-      "file": true,
-      "map": true,
-      "background": false,
-      "android": true,
-      "ptc": true,
-      "shell": true,
-      "route": true
-    },
-    "shellEnv": true,
-    "routeSection": true,
-    "maxOutputLines": 1000,
-    "maxFileBytes": 33554432,
-    "extraGuidance": ""
-  }
+  "plugins": [
+    {
+      "package": "/path/to/oc-ops/plugin-v2",
+      "options": {
+        "binaryPath": "oc-ops",
+        "components": {
+          "file": true,
+          "map": true,
+          "background": false,
+          "android": true,
+          "ptc": true,
+          "shell": true,
+          "route": true
+        },
+        "shellEnv": true,
+        "routeSection": true
+      }
+    }
+  ]
 }
 ```
+
+`make install` / `node scripts/plugin-register.js install <binaryPath>` writes
+this entry (with your installed binary path) automatically.
 
 ## Key reference
 
 | Key | Type | Default | Belongs to | Notes |
 | --- | --- | --- | --- | --- |
 | `binaryPath` | string | `"oc-ops"` | all | Go binary; an absolute path or a name resolved on PATH |
-| `required` | bool | `false` | all | Fail plugin activation if the binary is unusable |
-| `toolCallTimeoutMs` | int | `300000` | all | Per-call deadline |
+| `required` (v1) | bool | `false` | all | Fail plugin activation if the binary is unusable |
+| `toolCallTimeoutMs` (v1) | int | `300000` | all | Per-call deadline |
 | `components.file` | bool | `true` | file | Enable the four `file` tools |
 | `components.map` | bool | `true` | map | Enable `ops_map` |
 | `components.background` | bool | `false` | background | Enable background job tools |
 | `components.android` | bool | `true` | android | Enable android tools |
 | `components.ptc` | bool | `true` | ptc | Enable `ops_batch` / `ops_result` |
-| `components.shell` | bool | `true` | shell | Enable env injection |
+| `components.shell` | bool | `true` | shell | Enable shell terminal overrides |
 | `components.route` | bool | `true` | route | Enable the routing prompt section |
-| `shellEnv` | bool | `true` | shell | Inject Android/NDK/JAVA env + terminal overrides |
+| `shellEnv` | bool | `true` | shell | Inject terminal overrides (NO_COLOR/PAGER/TERM) |
 | `routeSection` | bool | `true` | route | Emit the routing section |
-| `maxOutputLines` | int | `1000` | file/map | Hard cap on emitted lines |
-| `maxFileBytes` | int | `33554432` | file | Per-file read budget |
-| `extraGuidance` | string | `""` | route | Extra text appended to the routing section |
+| `maxOutputLines` (v1) | int | `1000` | file/map | Hard cap on emitted lines |
+| `maxFileBytes` (v1) | int | `33554432` | file | Per-file read budget |
+| `extraGuidance` (v1) | string | `""` | route | Extra text appended to the routing section |
+
+`(v1)` marks keys accepted only by the legacy `plugin/` implementation
+(`@opencode-ai/plugin` v1). The v2 `plugin-v2/` implementation honors
+`binaryPath`, `components.*`, `shellEnv`, and `routeSection`.
 
 ## Validation
 

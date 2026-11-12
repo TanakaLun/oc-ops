@@ -10,9 +10,9 @@ Tools use the `ops_` prefix, matching the `dsh-ops` convention.
 | `file` | `file` | `ops_grep`, `ops_glob`, `ops_inspect`, `ops_replace` | on |
 | `map` | `map` | `ops_map` | on |
 | `background` | `bg` | `ops_bg_start`, `ops_bg_output`, `ops_bg_list`, `ops_bg_kill` | off |
-| `android` | `android` | `ops_android_env`, `ops_android_apk`, `ops_android_dex` | on |
+| `android` | `android` | `ops_android_apk`, `ops_android_dex` | on |
 | `ptc` | `batch`, `result` | `ops_batch`, `ops_result` | on |
-| `shell` | `android/env` + `shell.env` | (env injection only) | on |
+| `shell` | `shell.env` | (terminal overrides only) | on |
 | `route` | — | (system prompt routing) | on |
 
 ## Tool surface
@@ -114,11 +114,6 @@ Returns a `job_id`.
 Read / list / terminate jobs started in this session. Only owned jobs are
 visible. `output` supports `after_seq` for explicit continuation.
 
-### `android` — `ops_android_env`
-
-Print the resolved Android/NDK/JAVA environment as JSON, for the plugin's
-`shell.env` hook and for manual `source`/inspection.
-
 ### `android` — `ops_android_apk`
 
 Lightweight APK inspection (aapt2-based) — PACKAGE name, version, perms,
@@ -172,8 +167,9 @@ Bounded, session-owned result references.
 
 ## Env normalization (`shell`)
 
-Injected via the plugin `shell.env` hook: `ANDROID_HOME`, `ANDROID_NDK_HOME`,
-`JAVA_HOME`, plus `NO_COLOR=1`, `PAGER=cat`, `GIT_PAGER=cat`, `TERM=dumb`.
+Injected via the plugin `shell.env` hook: `NO_COLOR=1`, `PAGER=cat`,
+`GIT_PAGER=cat`, `TERM=dumb`. Toolchain paths (SDK/NDK/JAVA) are not resolved
+or injected by oc-ops — they belong to the user's shell environment.
 
 ## Related docs
 

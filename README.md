@@ -18,7 +18,6 @@ on this machine are **token waste, error loops, and attention drift**:
 - Model thrashes between tool calls to re-run a mistyped argument.
 - Exploring a large unfamiliar repo costs dozens of glob+read round trips.
 - Long Gradle/NDK builds occupy a foreground call until timeout.
-- Android builds trip over unset `NDK`/`JAVA_HOME`/`ANDROID_HOME`.
 
 ## Components
 
@@ -27,31 +26,35 @@ on this machine are **token waste, error loops, and attention drift**:
 | `file` | `ops_grep`, `ops_glob`, `ops_inspect`, `ops_replace` | on |
 | `map` | `ops_map` (repo structure + symbol index) | on |
 | `background` | `ops_bg_start`, `ops_bg_output`, `ops_bg_list`, `ops_bg_kill` | off |
-| `android` | `ops_android_env`, `ops_android_apk`, `ops_android_dex` | on |
+| `android` | `ops_android_apk`, `ops_android_dex` | on |
 | `ptc` | `ops_batch` (plan/run/resume), `ops_result` (put/page/release) | on |
-| `shell` | `shell.env` injection (NDK/JAVA/ANDROID_HOME, NO_COLOR) | on |
+| `shell` | `shell.env` terminal overrides (NO_COLOR/PAGER/TERM) | on |
 | `route` | system-prompt routing section (progressive disclosure) | on |
 
 ## Architecture
 
 Two layers: a **single Go binary** (`oc-ops`, pure-function JSON in/out) and an
-**opencode plugin** (`@opencode-ai/plugin` v1 `tool()` API) that drives it.
+**opencode plugin** (v2 `@opencode/plugin` `setup()` API, with a legacy v1
+`plugin/` for `@opencode-ai/plugin`) that drives it.
 
 ```
 opencode plugin (JS)  --exec-->  oc-ops (Go, $PREFIX/bin)
 ops_grep/glob/inspect/            grep/glob/inspect/replace/map/
 replace/map/bg_*/ptc/android      bg_start/output/list/kill + batch/result
-* + hooks                         + android env/apk/dex
+* + hooks                         + android apk/dex
 ```
 
 ## Install
 
 ```bash
-make install    # build + install to $PREFIX/bin + link plugin to ~/.config/opencode/plugins
+make install    # build + install to $PREFIX/bin + register the opencode plugin
 ```
 
-Prerequisites: Termux with `go` (verified `go1.27.1 android/arm64`) and
-`opencode` with `@opencode-ai/plugin` available.
+Prerequisites: Go 1.27+ and `opencode` with plugin support. On Termux the
+binary lands in `$PREFIX/bin`; on other Unix-like systems the default prefix is
+`/usr/local` — override with `make install PREFIX=~/.local` when you don't have
+root. The Go toolchain is auto-detected from `PATH` or `/opt/go*/bin` and
+`/usr/local/go/bin`.
 
 ## Test
 

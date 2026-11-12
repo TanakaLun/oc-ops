@@ -14,7 +14,6 @@ export function renderRouting(components, extraGuidance = "") {
     rows.push("| Explore an unfamiliar repo | ops_map |")
   }
   if (components.android) {
-    rows.push("| Resolve Android/NDK/JAVA env | ops_android_env |")
     rows.push("| Inspect an APK | ops_android_apk |")
   }
   if (components.background) {

@@ -7,6 +7,32 @@ project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
 
+### Changed
+
+- **opencode v2 plugin (`plugin-v2/`, zero-dependency):** `binaryPath` from
+  `ctx.options` (default `oc-ops` on PATH), per-component toggles, and a routing
+  section built from the enabled components.
+- **Platform-aware `make install`:** non-Termux prefix defaults to `/usr/local`
+  (override with `make install PREFIX=~/.local`); Go toolchain auto-detected
+  from PATH, `/opt/go*/bin`, `/usr/local/go/bin`.
+- **Plugin registration script:** manages both the legacy v1 (`plugin`) and v2
+  (`plugins`) entries and writes the installed binary path into plugin options.
+
+### Removed
+
+- **Android/NDK/JAVA toolchain path resolution:** `ops_android_env`, the
+  ANDROID_HOME/ANDROID_NDK_HOME/JAVA_HOME probing in `internal/android`, and
+  toolchain injection from the `shell.env` hook. Toolchain paths are the user's
+  shell responsibility; only APK inspection (`ops_android_apk`,
+  `ops_android_dex`) remains in the `android` component.
+
+### Fixed
+
+- Namespace CLI form `oc-ops file grep '{"path":...}'` no longer leaks the
+  `tool` key into handler args (it was rejected by strict file validation).
+- Test-suite race: `go test ./...` packages deleted the shared store root
+  concurrently; each test now clears only its own collection directory.
+
 ### Added
 
 - Go single-binary backend `oc-ops` with subcommands:

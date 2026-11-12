@@ -69,7 +69,7 @@ func buildRequest(tool string, rest []string) (contract.Request, error) {
 		Deadline: time.Now().Add(300 * time.Second),
 	}
 	// Namespace tools accept a bare subcommand positional: `oc-ops file grep ...`,
-	// `oc-ops bg start ...`, `oc-ops android env`. Translate it to args.tool.
+	// `oc-ops bg start ...`, `oc-ops android apk`. Translate it to args.tool.
 	if isNamespace(tool) && len(rest) > 0 && !stringsHasPrefix(rest[0], "--") && !stringsHasPrefix(rest[0], "{") {
 		req.Args["tool"] = rest[0]
 		rest = rest[1:]
@@ -152,6 +152,7 @@ func dispatch(req contract.Request) (contract.Response, error) {
 			return contract.Fail("INVALID_ARGUMENT", "usage: oc-ops file <grep|glob|inspect|replace>", false)
 		}
 		sub := req.Args["tool"].(string)
+		delete(req.Args, "tool")
 		req.Tool = sub
 		return file.Handler(req)
 	case "map":
@@ -159,6 +160,7 @@ func dispatch(req contract.Request) (contract.Response, error) {
 	case "bg_start", "bg_output", "bg_list", "bg_kill", "bg":
 		if req.Tool == "bg" {
 			sub := req.Args["tool"].(string)
+			delete(req.Args, "tool")
 			req.Tool = "bg_" + sub
 		}
 		return bg.Handler(req)
@@ -166,9 +168,10 @@ func dispatch(req contract.Request) (contract.Response, error) {
 		return batch.Handler(req)
 	case "result":
 		return result.Handler(req)
-	case "android_env", "android_apk", "android_dex", "android":
+	case "android_apk", "android_dex", "android":
 		if req.Tool == "android" {
 			sub := req.Args["tool"].(string)
+			delete(req.Args, "tool")
 			req.Tool = "android_" + sub
 		}
 		return android.Handler(req)
@@ -198,7 +201,7 @@ Usage:
   oc-ops <capability> [--key value ... | '{"key":"value"}']
   oc-ops file <grep|glob|inspect|replace> ...
   oc-ops bg <start|output|list|kill> ...
-  oc-ops android <env|apk|dex> ...
+  oc-ops android <apk|dex> ...
 
 Capabilities:
   grep       Search contents, summary-first
@@ -210,14 +213,13 @@ Capabilities:
   bg_output  Read job output
   bg_list    List owned jobs
   bg_kill    Kill a job
-  android_env  Resolve NDK/JAVA/ANDROID_HOME env
   android_apk  Inspect an APK (aapt2 badging)
   android_dex  List dex entries in an APK
 
 Examples:
   oc-ops grep '{"path":".","pattern":"foo","outputMode":"summary"}'
   oc-ops map --path . --mode both --depth 6
-  oc-ops android env`)
+  oc-ops android apk --apk base.apk`)
 }
 
 func stringsHasPrefix(s, p string) bool {

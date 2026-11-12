@@ -2,12 +2,15 @@ package store
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
 
 func TestStoreRoundTrip(t *testing.T) {
-	_ = os.RemoveAll(Root())
+	// Clear only the collection this test uses so parallel `go test ./...`
+	// packages don't delete each other's store root mid-test.
+	_ = os.RemoveAll(filepath.Join(Root(), "test-rt"))
 	s, err := Open("test-rt")
 	if err != nil {
 		t.Fatal(err)

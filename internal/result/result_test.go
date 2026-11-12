@@ -11,7 +11,9 @@ import (
 )
 
 func init() {
-	_ = os.RemoveAll(store.Root())
+	// Only clear this package's collection so parallel `go test ./...`
+	// packages don't delete each other's store root mid-test.
+	_ = os.RemoveAll(filepath.Join(store.Root(), "result"))
 }
 
 func mustPut(t *testing.T, items []any) string {
